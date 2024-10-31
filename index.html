@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet" type="text/css">
-    <title>Happy Diwali - Prashad</title>
+    <title>Happy Diwali</title>
     <style>
+        /* Main styling */
         .diwali-text {
             font-family: 'Arial', cursive;
             background: linear-gradient(94deg, #82f369 11%, #91cfff 40%, #fb0064 100%);
@@ -14,9 +15,9 @@
             background-clip: text;
             -webkit-text-fill-color: transparent;
             text-fill-color: transparent;
-            font-size: 8vw; /* Responsive font size */
+            font-size: 8vw;
             text-align: center;
-            margin-top: 2vh; /* Responsive margin */
+            margin-top: 2vh;
             z-index: 2;
         }
         body {
@@ -35,41 +36,101 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%; /* Responsive canvas */
-            height: 100%; /* Responsive canvas */
+            width: 100%;
+            height: 100%;
             z-index: 1;
         }
         .instructions {
             color: #ffffff;
-            font-size: 2vw; /* Responsive font size */
+            font-size: 2vw;
             margin-top: 1vh;
             font-family: Arial, sans-serif;
             z-index: 2;
             position: relative;
+        }
+        .login-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2vw;
+            padding: 3px 5px;
+            background-color: #343434;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 3;
+        }
+        .user-list {
+            color: white;
+            font-family: Arial, sans-serif;
+            margin-top: 20px;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
     <h1 class="diwali-text" id="diwaliText">Happy Diwali!</h1>
     <p class="instructions">Click anywhere to celebrate with fireworks!</p>
+    <button class="login-btn" onclick="verifyAdmin()">Login</button>
+    <div id="userList" class="user-list"></div>
     <canvas id="fireworksCanvas"></canvas>
     <audio id="fireworkSound" src="skyshot_sound.wav" type="audio/mpeg"></audio>
 
     <script>
         window.onload = function() {
-            // Prompt user for their name
             const userName = prompt("Please enter your name:");
             const diwaliTextElement = document.getElementById("diwaliText");
             
-            // Update the Diwali message with the user's name if provided
             if (userName) {
                 diwaliTextElement.innerText = `Happy Diwali, ${userName}!`;
+                saveUserInfo(userName);
             }
         };
 
+        function saveUserInfo(name) {
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            let userIndex = users.findIndex(user => user.name === name);
+            const currentTime = new Date().toLocaleString();
+
+            if (userIndex !== -1) {
+                users[userIndex].lastActive = currentTime;
+                users[userIndex].visitCount += 1;
+            } else {
+                users.push({ name, lastActive: currentTime, visitCount: 1 });
+            }
+
+            localStorage.setItem("users", JSON.stringify(users));
+        }
+
+        // Function to verify admin and display user information
+        function verifyAdmin() {
+            const adminPassword = "Admin@1112"; // Set a password here
+            const enteredPassword = prompt("Enter admin password:");
+            
+            if (enteredPassword === adminPassword) {
+                displayUserInfo();
+            } else {
+                alert("Incorrect password. Access denied.");
+            }
+        }
+
+        function displayUserInfo() {
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            const userList = document.getElementById("userList");
+
+            if (users.length > 0) {
+                userList.innerHTML = `<strong>Visitors:</strong><br>`;
+                users.forEach(user => {
+                    userList.innerHTML += `Name: ${user.name}, Last Active: ${user.lastActive}, Visits: ${user.visitCount}<br>`;
+                });
+            } else {
+                userList.innerHTML = "No visitors yet.";
+            }
+        }
+
         const canvas = document.getElementById("fireworksCanvas");
         const ctx = canvas.getContext("2d");
-        const fireworkSound = document.getElementById("fireworkSound");
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -130,7 +191,7 @@
                 this.targetY = targetY;
                 this.color = color;
                 this.exploded = false;
-                this.speed = 7;  // Increase launch speed
+                this.speed = 7;
                 this.particles = [];
             }
 
